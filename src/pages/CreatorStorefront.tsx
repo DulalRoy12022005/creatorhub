@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,10 +11,12 @@ import { ExternalLink } from "lucide-react";
 
 export default function CreatorStorefront() {
   const { creatorId } = useParams();
+  const navigate = useNavigate();
   const [creator, setCreator] = useState<any>(null);
   const [courses, setCourses] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [enrolling, setEnrolling] = useState<string | null>(null);
 
   useEffect(() => {
     if (creatorId) {
@@ -36,15 +38,50 @@ export default function CreatorStorefront() {
     setLoading(false);
   };
 
-  const handleEnroll = async (courseId: string) => {
+  const handleEnroll = async (course: any) => {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
       toast.error("Please sign in to enroll");
+      navigate("/auth");
       return;
     }
 
-    toast.info("Enrollment feature coming soon!");
+    // Check if already enrolled
+    const { data: existingEnrollment } = await supabase
+      .from("enrollments")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("course_id", course.id)
+      .single();
+
+    if (existingEnrollment) {
+      toast.info("You're already enrolled in this course!");
+      navigate(`/course/${course.id}`);
+      return;
+    }
+
+    // For free courses, enroll immediately
+    if (course.is_free) {
+      setEnrolling(course.id);
+      const { error } = await supabase.from("enrollments").insert({
+        user_id: user.id,
+        course_id: course.id,
+        progress: 0,
+      });
+
+      setEnrolling(null);
+
+      if (error) {
+        toast.error("Error enrolling in course");
+      } else {
+        toast.success("Successfully enrolled! Redirecting to course...");
+        setTimeout(() => navigate(`/course/${course.id}`), 1000);
+      }
+    } else {
+      // For paid courses, show payment coming soon
+      toast.info("Payment integration coming soon!");
+    }
   };
 
   if (loading) {
@@ -168,8 +205,17 @@ export default function CreatorStorefront() {
                           {course.description}
                         </p>
                         <div className="flex justify-between items-center">
-                          <span className="text-2xl font-bold text-primary">${course.price}</span>
-                          <Button onClick={() => handleEnroll(course.id)}>Enroll Now</Button>
+                          {course.is_free ? (
+                            <span className="text-2xl font-bold text-green-600">FREE</span>
+                          ) : (
+                            <span className="text-2xl font-bold text-primary">${course.price}</span>
+                          )}
+                          <Button 
+                            onClick={() => handleEnroll(course)}
+                            disabled={enrolling === course.id}
+                          >
+                            {enrolling === course.id ? "Enrolling..." : "Enroll Now"}
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>
