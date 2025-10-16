@@ -8,6 +8,8 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Explore from "./pages/Explore";
 import CreatorStorefront from "./pages/CreatorStorefront";
+import CourseViewer from "./pages/CourseViewer";
+import LessonsManager from "./components/dashboard/LessonsManager";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +26,8 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/explore" element={<Explore />} />
           <Route path="/creator/:creatorId" element={<CreatorStorefront />} />
+          <Route path="/course/:courseId" element={<CourseViewer />} />
+          <Route path="/course/:courseId/lessons" element={<LessonsManager />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

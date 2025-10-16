@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { BookOpen, Package } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function LearnerDashboard() {
+  const navigate = useNavigate();
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
 
@@ -62,13 +65,14 @@ export default function LearnerDashboard() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {enrollments.map((enrollment) => (
-                <Card key={enrollment.id} className="shadow-soft hover:shadow-hover transition-all">
+                <Card key={enrollment.id} className="shadow-soft hover:shadow-hover transition-all cursor-pointer"
+                  onClick={() => navigate(`/course/${enrollment.courses?.id}`)}>
                   <CardHeader>
                     <CardTitle>{enrollment.courses?.title}</CardTitle>
                     <CardDescription>{enrollment.courses?.category}</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <div className="flex justify-between text-sm">
                         <span>Progress</span>
                         <span className="font-medium">{enrollment.progress}%</span>
@@ -79,6 +83,9 @@ export default function LearnerDashboard() {
                           style={{ width: `${enrollment.progress}%` }}
                         />
                       </div>
+                      <Button className="w-full" size="sm">
+                        Continue Learning
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>

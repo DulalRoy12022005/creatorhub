@@ -8,9 +8,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, BookOpen } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function CoursesManager() {
+  const navigate = useNavigate();
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -20,6 +22,7 @@ export default function CoursesManager() {
     price: "",
     category: "",
     status: "draft",
+    is_free: false,
   });
 
   useEffect(() => {
@@ -54,9 +57,10 @@ export default function CoursesManager() {
       creator_id: user.id,
       title: formData.title,
       description: formData.description,
-      price: parseFloat(formData.price),
+      price: formData.is_free ? 0 : parseFloat(formData.price),
       category: formData.category,
       status: formData.status,
+      is_free: formData.is_free,
     });
 
     if (error) {
@@ -65,7 +69,7 @@ export default function CoursesManager() {
     } else {
       toast.success("Course created successfully!");
       setDialogOpen(false);
-      setFormData({ title: "", description: "", price: "", category: "", status: "draft" });
+      setFormData({ title: "", description: "", price: "", category: "", status: "draft", is_free: false });
       fetchCourses();
     }
   };
@@ -123,25 +127,38 @@ export default function CoursesManager() {
                   rows={4}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="price">Price ($)</Label>
-                  <Input
-                    id="price"
-                    type="number"
-                    step="0.01"
-                    value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                    required
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="is_free"
+                    checked={formData.is_free}
+                    onChange={(e) => setFormData({ ...formData, is_free: e.target.checked, price: e.target.checked ? "0" : formData.price })}
+                    className="h-4 w-4"
                   />
+                  <Label htmlFor="is_free">Make this course free</Label>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category</Label>
-                  <Input
-                    id="category"
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="price">Price ($)</Label>
+                    <Input
+                      id="price"
+                      type="number"
+                      step="0.01"
+                      value={formData.price}
+                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                      disabled={formData.is_free}
+                      required={!formData.is_free}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="category">Category</Label>
+                    <Input
+                      id="category"
+                      value={formData.category}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    />
+                  </div>
                 </div>
               </div>
               <div className="space-y-2">
@@ -180,6 +197,9 @@ export default function CoursesManager() {
                     <CardDescription className="mt-2">{course.category}</CardDescription>
                   </div>
                   <div className="flex gap-2">
+                    <Button variant="ghost" size="icon" onClick={() => navigate(`/course/${course.id}/lessons`)}>
+                      <BookOpen className="h-4 w-4" />
+                    </Button>
                     <Button variant="ghost" size="icon">
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -192,7 +212,16 @@ export default function CoursesManager() {
               <CardContent>
                 <p className="text-sm text-muted-foreground mb-4">{course.description}</p>
                 <div className="flex justify-between items-center">
-                  <span className="text-lg font-bold text-primary">${course.price}</span>
+                  <div className="flex gap-2 items-center">
+                    <span className="text-lg font-bold text-primary">
+                      {course.is_free ? "FREE" : `$${course.price}`}
+                    </span>
+                    {course.is_free && (
+                      <span className="px-2 py-1 rounded-full text-xs bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100">
+                        Free Access
+                      </span>
+                    )}
+                  </div>
                   <span className={`px-3 py-1 rounded-full text-xs ${
                     course.status === "published" ? "bg-secondary text-secondary-foreground" : "bg-muted"
                   }`}>

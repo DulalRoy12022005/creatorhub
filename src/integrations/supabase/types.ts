@@ -21,6 +21,7 @@ export type Database = {
           creator_id: string
           description: string | null
           id: string
+          is_free: boolean
           price: number
           status: string | null
           thumbnail_url: string | null
@@ -33,6 +34,7 @@ export type Database = {
           creator_id: string
           description?: string | null
           id?: string
+          is_free?: boolean
           price?: number
           status?: string | null
           thumbnail_url?: string | null
@@ -45,6 +47,7 @@ export type Database = {
           creator_id?: string
           description?: string | null
           id?: string
+          is_free?: boolean
           price?: number
           status?: string | null
           thumbnail_url?: string | null
