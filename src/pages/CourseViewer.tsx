@@ -103,10 +103,28 @@ export default function CourseViewer() {
     }
   };
 
+  const handleDownload = async (url: string, filename: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      toast.error("Failed to download file");
+    }
+  };
+
   const renderContent = () => {
     if (!currentLesson || !contentUrl) return null;
 
     const fileExt = currentLesson.content_url.split('.').pop()?.toLowerCase();
+    const filename = `${currentLesson.title}.${fileExt}`;
 
     if (['mp4', 'webm', 'ogg'].includes(fileExt)) {
       return (
@@ -124,8 +142,8 @@ export default function CourseViewer() {
             <FileText className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
             <p className="text-lg font-medium mb-2">PDF Document</p>
             <p className="text-muted-foreground mb-4">{currentLesson.title}</p>
-            <Button onClick={() => window.open(contentUrl, '_blank')}>
-              Open PDF in New Tab
+            <Button onClick={() => handleDownload(contentUrl, filename)}>
+              Download PDF
             </Button>
           </div>
         </div>
@@ -151,7 +169,7 @@ export default function CourseViewer() {
       <div className="text-center py-12">
         <FileText className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
         <p className="text-muted-foreground">Preview not available for this file type.</p>
-        <Button onClick={() => window.open(contentUrl, '_blank')} className="mt-4">
+        <Button onClick={() => handleDownload(contentUrl, filename)} className="mt-4">
           Download File
         </Button>
       </div>
