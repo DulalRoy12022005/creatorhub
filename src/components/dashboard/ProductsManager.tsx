@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Plus, Edit, Trash2 } from "lucide-react";
 
-export default function ProductsManager() {
+export default function ProductsManager({ onProductChange }: { onProductChange?: () => void }) {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -65,6 +65,7 @@ export default function ProductsManager() {
       setDialogOpen(false);
       setFormData({ name: "", description: "", price: "", type: "digital" });
       fetchProducts();
+      onProductChange?.();
     }
   };
 
@@ -76,6 +77,7 @@ export default function ProductsManager() {
     } else {
       toast.success("Product deleted");
       fetchProducts();
+      onProductChange?.();
     }
   };
 

@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { Plus, Edit, Trash2, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-export default function CoursesManager() {
+export default function CoursesManager({ onCourseChange }: { onCourseChange?: () => void }) {
   const navigate = useNavigate();
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -71,6 +71,7 @@ export default function CoursesManager() {
       setDialogOpen(false);
       setFormData({ title: "", description: "", price: "", category: "", status: "draft", is_free: false });
       fetchCourses();
+      onCourseChange?.();
     }
   };
 
@@ -82,6 +83,7 @@ export default function CoursesManager() {
     } else {
       toast.success("Course deleted");
       fetchCourses();
+      onCourseChange?.();
     }
   };
 
