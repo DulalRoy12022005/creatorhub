@@ -119,11 +119,16 @@ export default function CourseViewer() {
 
     if (fileExt === 'pdf') {
       return (
-        <iframe
-          src={contentUrl}
-          className="w-full h-[600px] rounded-lg"
-          title={currentLesson.title}
-        />
+        <div className="w-full h-[600px] rounded-lg border flex items-center justify-center bg-muted">
+          <div className="text-center">
+            <FileText className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
+            <p className="text-lg font-medium mb-2">PDF Document</p>
+            <p className="text-muted-foreground mb-4">{currentLesson.title}</p>
+            <Button onClick={() => window.open(contentUrl, '_blank')}>
+              Open PDF in New Tab
+            </Button>
+          </div>
+        </div>
       );
     }
 
