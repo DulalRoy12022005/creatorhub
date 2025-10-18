@@ -19,9 +19,8 @@ export default function Explore() {
 
   const fetchCreators = async () => {
     const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("role", "creator");
+      .from("public_profiles")
+      .select("*");
 
     if (error) {
       console.error("Error fetching creators:", error);

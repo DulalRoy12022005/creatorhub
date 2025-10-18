@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import CoursesManager from "./CoursesManager";
 import ProductsManager from "./ProductsManager";
 import StorefrontEditor from "./StorefrontEditor";
+import ProfileEditor from "./ProfileEditor";
 
 export default function CreatorDashboard() {
   const [stats, setStats] = useState({
@@ -127,11 +128,12 @@ export default function CreatorDashboard() {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="courses" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 max-w-2xl mb-8">
+        <TabsList className="grid w-full grid-cols-5 max-w-3xl mb-8">
           <TabsTrigger value="courses">My Courses</TabsTrigger>
           <TabsTrigger value="products">My Products</TabsTrigger>
           <TabsTrigger value="storefront">Storefront</TabsTrigger>
           <TabsTrigger value="earnings">Earnings</TabsTrigger>
+          <TabsTrigger value="profile">Profile</TabsTrigger>
         </TabsList>
 
         <TabsContent value="courses">
@@ -166,6 +168,10 @@ export default function CreatorDashboard() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="profile">
+          <ProfileEditor />
         </TabsContent>
       </Tabs>
     </div>

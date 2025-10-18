@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { BookOpen, Package } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import ProfileEditor from "./ProfileEditor";
 
 export default function LearnerDashboard() {
   const navigate = useNavigate();
@@ -46,9 +47,10 @@ export default function LearnerDashboard() {
       <h1 className="text-4xl font-bold mb-8">My Learning</h1>
 
       <Tabs defaultValue="courses" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 max-w-md mb-8">
+        <TabsList className="grid w-full grid-cols-3 max-w-lg mb-8">
           <TabsTrigger value="courses">My Courses</TabsTrigger>
           <TabsTrigger value="orders">My Orders</TabsTrigger>
+          <TabsTrigger value="profile">Profile</TabsTrigger>
         </TabsList>
 
         <TabsContent value="courses">
@@ -126,6 +128,10 @@ export default function LearnerDashboard() {
               ))}
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="profile">
+          <ProfileEditor />
         </TabsContent>
       </Tabs>
     </div>
