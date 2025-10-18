@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Navbar } from "@/components/Navbar";
+import { signUpSchema, signInSchema } from "@/lib/validation";
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -36,14 +37,22 @@ export default function Auth() {
 
     try {
       if (isSignup) {
+        // Validate signup data
+        const validation = signUpSchema.safeParse(formData);
+        if (!validation.success) {
+          toast.error(validation.error.issues[0].message);
+          setLoading(false);
+          return;
+        }
+
         const { error } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
+          email: validation.data.email,
+          password: validation.data.password,
           options: {
             emailRedirectTo: `${window.location.origin}/`,
             data: {
-              name: formData.name,
-              role: formData.role,
+              name: validation.data.name,
+              role: validation.data.role,
             },
           },
         });
@@ -53,9 +62,20 @@ export default function Auth() {
         toast.success("Account created! Please check your email to verify.");
         navigate("/dashboard");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        // Validate signin data
+        const validation = signInSchema.safeParse({
           email: formData.email,
           password: formData.password,
+        });
+        if (!validation.success) {
+          toast.error(validation.error.issues[0].message);
+          setLoading(false);
+          return;
+        }
+
+        const { error } = await supabase.auth.signInWithPassword({
+          email: validation.data.email,
+          password: validation.data.password,
         });
 
         if (error) throw error;

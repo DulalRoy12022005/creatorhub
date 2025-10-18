@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Plus, Edit, Trash2, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { courseSchema } from "@/lib/validation";
 
 export default function CoursesManager({ onCourseChange }: { onCourseChange?: () => void }) {
   const navigate = useNavigate();
@@ -50,16 +51,31 @@ export default function CoursesManager({ onCourseChange }: { onCourseChange?: ()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
 
-    const { error } = await supabase.from("courses").insert({
-      creator_id: user.id,
+    // Validate input
+    const validation = courseSchema.safeParse({
       title: formData.title,
       description: formData.description,
       price: formData.is_free ? 0 : parseFloat(formData.price),
       category: formData.category,
       status: formData.status,
+    });
+
+    if (!validation.success) {
+      toast.error(validation.error.issues[0].message);
+      return;
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { error } = await supabase.from("courses").insert({
+      creator_id: user.id,
+      title: validation.data.title,
+      description: validation.data.description,
+      price: validation.data.price,
+      category: validation.data.category,
+      status: validation.data.status,
       is_free: formData.is_free,
     });
 

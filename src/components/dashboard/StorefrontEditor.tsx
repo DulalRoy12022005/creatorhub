@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { profileSchema } from "@/lib/validation";
 
 export default function StorefrontEditor() {
   const [loading, setLoading] = useState(false);
@@ -58,16 +59,24 @@ export default function StorefrontEditor() {
     e.preventDefault();
     setLoading(true);
 
+    // Validate input
+    const validation = profileSchema.safeParse(formData);
+    if (!validation.success) {
+      toast.error(validation.error.issues[0].message);
+      setLoading(false);
+      return;
+    }
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
     const { error } = await supabase
       .from("profiles")
       .update({
-        bio: formData.bio,
-        banner_url: formData.banner_url,
-        avatar_url: formData.avatar_url,
-        social_links: formData.social_links,
+        bio: validation.data.bio,
+        banner_url: validation.data.banner_url,
+        avatar_url: validation.data.avatar_url,
+        social_links: validation.data.social_links,
       })
       .eq("id", user.id);
 

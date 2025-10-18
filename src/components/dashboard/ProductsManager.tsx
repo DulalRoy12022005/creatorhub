@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Plus, Edit, Trash2 } from "lucide-react";
+import { productSchema } from "@/lib/validation";
 
 export default function ProductsManager({ onProductChange }: { onProductChange?: () => void }) {
   const [products, setProducts] = useState<any[]>([]);
@@ -18,7 +19,7 @@ export default function ProductsManager({ onProductChange }: { onProductChange?:
     name: "",
     description: "",
     price: "",
-    type: "digital" as "digital" | "physical",
+    type: "digital" as "digital" | "physical" | "service",
   });
 
   useEffect(() => {
@@ -46,16 +47,31 @@ export default function ProductsManager({ onProductChange }: { onProductChange?:
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
 
-    const { error } = await supabase.from("products").insert({
-      creator_id: user.id,
+    // Validate input
+    const validation = productSchema.safeParse({
       name: formData.name,
       description: formData.description,
       price: parseFloat(formData.price),
       type: formData.type,
+      image_url: '',
     });
+
+    if (!validation.success) {
+      toast.error(validation.error.issues[0].message);
+      return;
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { error } = await supabase.from("products").insert([{
+      creator_id: user.id,
+      name: validation.data.name,
+      description: validation.data.description,
+      price: validation.data.price,
+      type: validation.data.type as "digital" | "physical",
+    }]);
 
     if (error) {
       toast.error("Error creating product");
@@ -137,13 +153,14 @@ export default function ProductsManager({ onProductChange }: { onProductChange?:
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="type">Type</Label>
-                  <Select value={formData.type} onValueChange={(value: "digital" | "physical") => setFormData({ ...formData, type: value })}>
+                  <Select value={formData.type} onValueChange={(value: "digital" | "physical" | "service") => setFormData({ ...formData, type: value })}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="digital">Digital</SelectItem>
                       <SelectItem value="physical">Physical</SelectItem>
+                      <SelectItem value="service">Service</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
