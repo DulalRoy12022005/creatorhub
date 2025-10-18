@@ -4,6 +4,7 @@ import { User, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { Session } from "@supabase/supabase-js";
+import { ThemeToggle } from "./ThemeToggle";
 
 export const Navbar = () => {
   const navigate = useNavigate();
@@ -37,6 +38,7 @@ export const Navbar = () => {
           </Link>
 
           <div className="flex items-center gap-4">
+            <ThemeToggle />
             {session ? (
               <>
                 <Link to="/explore">
