@@ -103,32 +103,14 @@ export default function CourseViewer() {
     }
   };
 
-  const handleDownload = async (url: string, filename: string) => {
-    try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
-    } catch (error) {
-      toast.error("Failed to download file");
-    }
-  };
-
   const renderContent = () => {
     if (!currentLesson || !contentUrl) return null;
 
     const fileExt = currentLesson.content_url.split('.').pop()?.toLowerCase();
-    const filename = `${currentLesson.title}.${fileExt}`;
 
     if (['mp4', 'webm', 'ogg'].includes(fileExt)) {
       return (
-        <video controls className="w-full rounded-lg" key={contentUrl}>
+        <video controls controlsList="nodownload" className="w-full rounded-lg" key={contentUrl}>
           <source src={contentUrl} type={`video/${fileExt}`} />
           Your browser does not support video playback.
         </video>
@@ -137,28 +119,33 @@ export default function CourseViewer() {
 
     if (fileExt === 'pdf') {
       return (
-        <div className="w-full h-[600px] rounded-lg border flex items-center justify-center bg-muted">
-          <div className="text-center">
-            <FileText className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
-            <p className="text-lg font-medium mb-2">PDF Document</p>
-            <p className="text-muted-foreground mb-4">{currentLesson.title}</p>
-            <Button onClick={() => handleDownload(contentUrl, filename)}>
-              Download PDF
-            </Button>
-          </div>
+        <div className="w-full h-[600px] rounded-lg border">
+          <iframe
+            src={contentUrl}
+            className="w-full h-full rounded-lg"
+            title={currentLesson.title}
+          />
         </div>
       );
     }
 
     if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExt)) {
       return (
-        <img src={contentUrl} alt={currentLesson.title} className="w-full rounded-lg" />
+        <div className="w-full rounded-lg border p-4 bg-muted">
+          <img 
+            src={contentUrl} 
+            alt={currentLesson.title} 
+            className="w-full rounded-lg"
+            onContextMenu={(e) => e.preventDefault()}
+            style={{ userSelect: 'none', pointerEvents: 'none' }}
+          />
+        </div>
       );
     }
 
     if (['mp3', 'wav'].includes(fileExt)) {
       return (
-        <audio controls className="w-full">
+        <audio controls controlsList="nodownload" className="w-full">
           <source src={contentUrl} type={`audio/${fileExt}`} />
           Your browser does not support audio playback.
         </audio>
@@ -168,10 +155,7 @@ export default function CourseViewer() {
     return (
       <div className="text-center py-12">
         <FileText className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-        <p className="text-muted-foreground">Preview not available for this file type.</p>
-        <Button onClick={() => handleDownload(contentUrl, filename)} className="mt-4">
-          Download File
-        </Button>
+        <p className="text-muted-foreground">Content not available for preview.</p>
       </div>
     );
   };

@@ -26,7 +26,7 @@ export default function CreatorStorefront() {
 
   const fetchCreatorData = async () => {
     const [creatorResult, coursesResult, productsResult] = await Promise.all([
-      supabase.from("profiles").select("*").eq("id", creatorId).single(),
+      supabase.from("public_profiles").select("*").eq("id", creatorId).single(),
       supabase.from("courses").select("*").eq("creator_id", creatorId).eq("status", "published"),
       supabase.from("products").select("*").eq("creator_id", creatorId),
     ]);
