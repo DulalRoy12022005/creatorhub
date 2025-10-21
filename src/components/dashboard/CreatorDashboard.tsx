@@ -1,13 +1,19 @@
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Package, Store, DollarSign } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { BookOpen, Package, Store, DollarSign, Share2, Copy, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import CoursesManager from "./CoursesManager";
 import ProductsManager from "./ProductsManager";
 import StorefrontEditor from "./StorefrontEditor";
 import ProfileEditor from "./ProfileEditor";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 export default function CreatorDashboard() {
   const [stats, setStats] = useState({
@@ -16,10 +22,20 @@ export default function CreatorDashboard() {
     totalLearners: 0,
     productsListed: 0,
   });
+  const [userId, setUserId] = useState<string>("");
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     fetchStats();
+    fetchUserId();
   }, []);
+
+  const fetchUserId = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      setUserId(user.id);
+    }
+  };
 
   const fetchStats = async () => {
     try {
@@ -79,9 +95,53 @@ export default function CreatorDashboard() {
     }
   };
 
+  const handleCopyShareLink = async () => {
+    const shareUrl = `${window.location.origin}/creator/${userId}`;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      toast.success("Share link copied to clipboard!");
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      toast.error("Failed to copy link");
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold mb-8">Creator Dashboard</h1>
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-4xl font-bold">Creator Dashboard</h1>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="gap-2">
+              <Share2 className="h-4 w-4" />
+              Share Storefront
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80">
+            <div className="space-y-4">
+              <div>
+                <h3 className="font-semibold mb-2">Share Your Storefront</h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Copy this link to share your creator page with others
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={`${window.location.origin}/creator/${userId}`}
+                  className="flex-1 px-3 py-2 text-sm border rounded-md bg-muted"
+                />
+                <Button size="sm" onClick={handleCopyShareLink} className="gap-2">
+                  {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  {copied ? "Copied" : "Copy"}
+                </Button>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
