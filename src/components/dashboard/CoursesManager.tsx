@@ -17,6 +17,7 @@ export default function CoursesManager({ onCourseChange }: { onCourseChange?: ()
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<any>(null);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -69,25 +70,74 @@ export default function CoursesManager({ onCourseChange }: { onCourseChange?: ()
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { error } = await supabase.from("courses").insert({
-      creator_id: user.id,
-      title: validation.data.title,
-      description: validation.data.description,
-      price: validation.data.price,
-      category: validation.data.category,
-      status: validation.data.status,
-      is_free: formData.is_free,
-    });
+    if (editingCourse) {
+      // Update existing course
+      const { error } = await supabase
+        .from("courses")
+        .update({
+          title: validation.data.title,
+          description: validation.data.description,
+          price: validation.data.price,
+          category: validation.data.category,
+          status: validation.data.status,
+          is_free: formData.is_free,
+        })
+        .eq("id", editingCourse.id);
 
-    if (error) {
-      toast.error("Error creating course");
-      console.error(error);
+      if (error) {
+        toast.error("Error updating course");
+        console.error(error);
+      } else {
+        toast.success("Course updated successfully!");
+        setDialogOpen(false);
+        setEditingCourse(null);
+        setFormData({ title: "", description: "", price: "", category: "", status: "draft", is_free: false });
+        fetchCourses();
+        onCourseChange?.();
+      }
     } else {
-      toast.success("Course created successfully!");
-      setDialogOpen(false);
+      // Create new course
+      const { error } = await supabase.from("courses").insert({
+        creator_id: user.id,
+        title: validation.data.title,
+        description: validation.data.description,
+        price: validation.data.price,
+        category: validation.data.category,
+        status: validation.data.status,
+        is_free: formData.is_free,
+      });
+
+      if (error) {
+        toast.error("Error creating course");
+        console.error(error);
+      } else {
+        toast.success("Course created successfully!");
+        setDialogOpen(false);
+        setFormData({ title: "", description: "", price: "", category: "", status: "draft", is_free: false });
+        fetchCourses();
+        onCourseChange?.();
+      }
+    }
+  };
+
+  const handleEdit = (course: any) => {
+    setEditingCourse(course);
+    setFormData({
+      title: course.title,
+      description: course.description || "",
+      price: course.price.toString(),
+      category: course.category || "",
+      status: course.status,
+      is_free: course.is_free,
+    });
+    setDialogOpen(true);
+  };
+
+  const handleDialogClose = (open: boolean) => {
+    setDialogOpen(open);
+    if (!open) {
+      setEditingCourse(null);
       setFormData({ title: "", description: "", price: "", category: "", status: "draft", is_free: false });
-      fetchCourses();
-      onCourseChange?.();
     }
   };
 
@@ -114,7 +164,7 @@ export default function CoursesManager({ onCourseChange }: { onCourseChange?: ()
           <h2 className="text-2xl font-semibold">My Courses</h2>
           <p className="text-muted-foreground">Manage your course offerings</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <Dialog open={dialogOpen} onOpenChange={handleDialogClose}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
@@ -123,8 +173,10 @@ export default function CoursesManager({ onCourseChange }: { onCourseChange?: ()
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Create New Course</DialogTitle>
-              <DialogDescription>Fill in the details for your new course</DialogDescription>
+              <DialogTitle>{editingCourse ? "Edit Course" : "Create New Course"}</DialogTitle>
+              <DialogDescription>
+                {editingCourse ? "Update the details for your course" : "Fill in the details for your new course"}
+              </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
@@ -191,7 +243,9 @@ export default function CoursesManager({ onCourseChange }: { onCourseChange?: ()
                   </SelectContent>
                 </Select>
               </div>
-              <Button type="submit" className="w-full">Create Course</Button>
+              <Button type="submit" className="w-full">
+                {editingCourse ? "Update Course" : "Create Course"}
+              </Button>
             </form>
           </DialogContent>
         </Dialog>
@@ -218,7 +272,7 @@ export default function CoursesManager({ onCourseChange }: { onCourseChange?: ()
                     <Button variant="ghost" size="icon" onClick={() => navigate(`/course/${course.id}/lessons`)}>
                       <BookOpen className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon">
+                    <Button variant="ghost" size="icon" onClick={() => handleEdit(course)}>
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="icon" onClick={() => handleDelete(course.id)}>
