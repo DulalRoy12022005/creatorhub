@@ -8,10 +8,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ExternalLink } from "lucide-react";
+import { useCart } from "@/hooks/useCart";
 
 export default function CreatorStorefront() {
   const { creatorId } = useParams();
   const navigate = useNavigate();
+  const { addItem } = useCart();
   const [creator, setCreator] = useState<any>(null);
   const [courses, setCourses] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
@@ -248,7 +250,20 @@ export default function CreatorStorefront() {
                             {product.type}
                           </span>
                         </div>
-                        <Button variant="secondary" className="w-full">Add to Cart</Button>
+                        <Button 
+                          variant="secondary" 
+                          className="w-full"
+                          onClick={() => addItem({
+                            id: product.id,
+                            name: product.name,
+                            price: Number(product.price),
+                            type: product.type,
+                            description: product.description,
+                            image_url: product.image_url,
+                          })}
+                        >
+                          Add to Cart
+                        </Button>
                       </CardContent>
                     </Card>
                   ))}
