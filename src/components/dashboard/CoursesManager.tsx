@@ -15,6 +15,7 @@ import { courseSchema } from "@/lib/validation";
 export default function CoursesManager({ onCourseChange }: { onCourseChange?: () => void }) {
   const navigate = useNavigate();
   const [courses, setCourses] = useState<any[]>([]);
+  const [courseLearners, setCourseLearners] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<any>(null);
@@ -46,6 +47,22 @@ export default function CoursesManager({ onCourseChange }: { onCourseChange?: ()
       console.error(error);
     } else {
       setCourses(data || []);
+      
+      // Fetch learner counts for each course
+      if (data && data.length > 0) {
+        const courseIds = data.map(c => c.id);
+        const { data: enrollmentsData } = await supabase
+          .from("enrollments")
+          .select("course_id")
+          .in("course_id", courseIds);
+
+        // Count enrollments per course
+        const counts: Record<string, number> = {};
+        enrollmentsData?.forEach(enrollment => {
+          counts[enrollment.course_id] = (counts[enrollment.course_id] || 0) + 1;
+        });
+        setCourseLearners(counts);
+      }
     }
     setLoading(false);
   };
@@ -283,7 +300,7 @@ export default function CoursesManager({ onCourseChange }: { onCourseChange?: ()
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground mb-4">{course.description}</p>
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center mb-2">
                   <div className="flex gap-2 items-center">
                     <span className="text-lg font-bold text-primary">
                       {course.is_free ? "FREE" : `$${course.price}`}
@@ -299,6 +316,9 @@ export default function CoursesManager({ onCourseChange }: { onCourseChange?: ()
                   }`}>
                     {course.status}
                   </span>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  👥 {courseLearners[course.id] || 0} learner{(courseLearners[course.id] || 0) !== 1 ? 's' : ''} enrolled
                 </div>
               </CardContent>
             </Card>
