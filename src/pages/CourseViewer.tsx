@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, PlayCircle, FileText, Lock } from "lucide-react";
+import { ArrowLeft, PlayCircle, FileText, Lock, CheckCircle2 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 
 export default function CourseViewer() {
@@ -16,6 +16,8 @@ export default function CourseViewer() {
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [contentUrl, setContentUrl] = useState<string>("");
+  const [completedLessons, setCompletedLessons] = useState<Set<string>>(new Set());
+  const [enrollmentId, setEnrollmentId] = useState<string | null>(null);
 
   useEffect(() => {
     checkEnrollmentAndFetchCourse();
@@ -53,9 +55,12 @@ export default function CourseViewer() {
       .select("*")
       .eq("course_id", courseId)
       .eq("user_id", user.id)
-      .single();
+      .maybeSingle();
 
     setIsEnrolled(!!enrollmentData || courseData.is_free);
+    if (enrollmentData) {
+      setEnrollmentId(enrollmentData.id);
+    }
 
     if (enrollmentData || courseData.is_free) {
       const { data: lessonsData, error: lessonsError } = await supabase
@@ -69,6 +74,17 @@ export default function CourseViewer() {
         if (lessonsData.length > 0) {
           setCurrentLesson(lessonsData[0]);
         }
+      }
+
+      // Fetch completed lessons
+      const { data: completionsData } = await supabase
+        .from("lesson_completions")
+        .select("lesson_id")
+        .eq("user_id", user.id)
+        .eq("course_id", courseId);
+
+      if (completionsData) {
+        setCompletedLessons(new Set(completionsData.map(c => c.lesson_id)));
       }
     }
 
@@ -100,6 +116,36 @@ export default function CourseViewer() {
     } else {
       toast.success("Successfully enrolled!");
       checkEnrollmentAndFetchCourse();
+    }
+  };
+
+  const handleMarkComplete = async () => {
+    if (!currentLesson) return;
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { error } = await supabase.from("lesson_completions").insert({
+      user_id: user.id,
+      lesson_id: currentLesson.id,
+      course_id: courseId,
+    });
+
+    if (error) {
+      if (error.code === '23505') {
+        toast.info("Lesson already marked as complete");
+      } else {
+        toast.error("Error marking lesson complete");
+      }
+    } else {
+      setCompletedLessons(prev => new Set([...prev, currentLesson.id]));
+      toast.success("Lesson marked complete!");
+      
+      // Move to next lesson if available
+      const currentIndex = lessons.findIndex(l => l.id === currentLesson.id);
+      if (currentIndex < lessons.length - 1) {
+        setCurrentLesson(lessons[currentIndex + 1]);
+      }
     }
   };
 
@@ -225,6 +271,25 @@ export default function CourseViewer() {
               </CardHeader>
               <CardContent>
                 {renderContent()}
+                <div className="mt-4 flex justify-end">
+                  <Button
+                    onClick={handleMarkComplete}
+                    disabled={completedLessons.has(currentLesson?.id)}
+                    className="gap-2"
+                  >
+                    {completedLessons.has(currentLesson?.id) ? (
+                      <>
+                        <CheckCircle2 className="h-4 w-4" />
+                        Completed
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="h-4 w-4" />
+                        Mark as Complete
+                      </>
+                    )}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -248,7 +313,11 @@ export default function CourseViewer() {
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <PlayCircle className="h-4 w-4 flex-shrink-0" />
+                        {completedLessons.has(lesson.id) ? (
+                          <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-green-500" />
+                        ) : (
+                          <PlayCircle className="h-4 w-4 flex-shrink-0" />
+                        )}
                         <div className="flex-1 min-w-0">
                           <p className="font-medium truncate">
                             {index + 1}. {lesson.title}
