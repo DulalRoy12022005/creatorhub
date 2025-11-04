@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import Explore from "./pages/Explore";
 import CreatorStorefront from "./pages/CreatorStorefront";
 import CourseViewer from "./pages/CourseViewer";
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/explore" element={<Explore />} />
           <Route path="/creator/:creatorId" element={<CreatorStorefront />} />
           <Route path="/course/:courseId" element={<CourseViewer />} />

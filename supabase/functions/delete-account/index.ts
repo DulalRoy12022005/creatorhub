@@ -30,17 +30,34 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    console.log(`Deleting account for user: ${user.id}`);
+    // Get request body to check if admin is deleting another user
+    const body = await req.json();
+    const targetUserId = body.userId || user.id;
+
+    // If trying to delete another user, verify admin role
+    if (targetUserId !== user.id) {
+      const { data: roleData } = await supabaseAdmin
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!roleData || roleData.role !== 'admin') {
+        throw new Error('Admin privileges required to delete other users');
+      }
+    }
+
+    console.log(`Deleting account for user: ${targetUserId}`);
 
     // Delete the user (this will cascade delete related data due to foreign keys)
-    const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user.id);
+    const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(targetUserId);
 
     if (deleteError) {
       console.error('Error deleting user:', deleteError);
       throw deleteError;
     }
 
-    console.log(`Successfully deleted account for user: ${user.id}`);
+    console.log(`Successfully deleted account for user: ${targetUserId}`);
 
     return new Response(
       JSON.stringify({ success: true, message: 'Account deleted successfully' }),
