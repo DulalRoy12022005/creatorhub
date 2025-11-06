@@ -282,6 +282,7 @@ export type Database = {
           id: string
           name: string
           role: Database["public"]["Enums"]["user_role"]
+          show_watermark: boolean
           social_links: Json | null
           updated_at: string | null
         }
@@ -294,6 +295,7 @@ export type Database = {
           id: string
           name: string
           role?: Database["public"]["Enums"]["user_role"]
+          show_watermark?: boolean
           social_links?: Json | null
           updated_at?: string | null
         }
@@ -306,6 +308,7 @@ export type Database = {
           id?: string
           name?: string
           role?: Database["public"]["Enums"]["user_role"]
+          show_watermark?: boolean
           social_links?: Json | null
           updated_at?: string | null
         }

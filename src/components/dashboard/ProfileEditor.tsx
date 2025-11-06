@@ -19,6 +19,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Trash2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 export default function ProfileEditor() {
   const navigate = useNavigate();
@@ -27,6 +28,7 @@ export default function ProfileEditor() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    show_watermark: false,
   });
 
   useEffect(() => {
@@ -49,6 +51,7 @@ export default function ProfileEditor() {
       setFormData({
         name: data.name || "",
         email: data.email || "",
+        show_watermark: data.show_watermark || false,
       });
     }
   };
@@ -73,6 +76,7 @@ export default function ProfileEditor() {
       .update({
         name: formData.name,
         email: formData.email,
+        show_watermark: formData.show_watermark,
       })
       .eq("id", user.id);
 
@@ -147,6 +151,20 @@ export default function ProfileEditor() {
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               required
+            />
+          </div>
+
+          <div className="flex items-center justify-between space-x-2 rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <Label htmlFor="watermark">Enable Watermark</Label>
+              <p className="text-sm text-muted-foreground">
+                Display your name as a watermark on course content
+              </p>
+            </div>
+            <Switch
+              id="watermark"
+              checked={formData.show_watermark}
+              onCheckedChange={(checked) => setFormData({ ...formData, show_watermark: checked })}
             />
           </div>
 

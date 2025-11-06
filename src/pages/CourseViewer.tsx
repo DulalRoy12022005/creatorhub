@@ -18,6 +18,8 @@ export default function CourseViewer() {
   const [contentUrl, setContentUrl] = useState<string>("");
   const [completedLessons, setCompletedLessons] = useState<Set<string>>(new Set());
   const [enrollmentId, setEnrollmentId] = useState<string | null>(null);
+  const [creatorName, setCreatorName] = useState<string>("");
+  const [showWatermark, setShowWatermark] = useState(false);
 
   useEffect(() => {
     checkEnrollmentAndFetchCourse();
@@ -49,6 +51,18 @@ export default function CourseViewer() {
     }
 
     setCourse(courseData);
+
+    // Fetch creator profile for watermark
+    const { data: creatorProfile } = await supabase
+      .from("profiles")
+      .select("name, show_watermark")
+      .eq("id", courseData.creator_id)
+      .single();
+
+    if (creatorProfile) {
+      setCreatorName(creatorProfile.name);
+      setShowWatermark(creatorProfile.show_watermark);
+    }
 
     const { data: enrollmentData } = await supabase
       .from("enrollments")
@@ -269,8 +283,15 @@ export default function CourseViewer() {
                 <CardTitle>{currentLesson?.title || course?.title}</CardTitle>
                 <CardDescription>{course?.category}</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="relative">
                 {renderContent()}
+                {showWatermark && creatorName && (
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none">
+                    <p className="text-6xl font-bold text-white/10 rotate-[-45deg] whitespace-nowrap">
+                      {creatorName}
+                    </p>
+                  </div>
+                )}
                 <div className="mt-4 flex justify-end">
                   <Button
                     onClick={handleMarkComplete}
