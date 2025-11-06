@@ -62,6 +62,10 @@ export default function CourseViewer() {
     if (creatorProfile) {
       setCreatorName(creatorProfile.name);
       setShowWatermark(creatorProfile.show_watermark);
+      console.log("Watermark settings:", {
+        creatorName: creatorProfile.name,
+        showWatermark: creatorProfile.show_watermark
+      });
     }
 
     const { data: enrollmentData } = await supabase
@@ -284,11 +288,11 @@ export default function CourseViewer() {
                 <CardDescription>{course?.category}</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="relative">
+                <div className="relative overflow-hidden">
                   {renderContent()}
                   {showWatermark && creatorName && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
-                      <p className="text-7xl font-bold text-foreground/5 rotate-[-45deg] whitespace-nowrap">
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-10">
+                      <p className="text-8xl font-bold text-white/20 dark:text-white/15 rotate-[-45deg] whitespace-nowrap drop-shadow-lg">
                         {creatorName}
                       </p>
                     </div>
