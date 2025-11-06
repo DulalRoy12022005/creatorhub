@@ -283,15 +283,17 @@ export default function CourseViewer() {
                 <CardTitle>{currentLesson?.title || course?.title}</CardTitle>
                 <CardDescription>{course?.category}</CardDescription>
               </CardHeader>
-              <CardContent className="relative">
-                {renderContent()}
-                {showWatermark && creatorName && (
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none">
-                    <p className="text-6xl font-bold text-white/10 rotate-[-45deg] whitespace-nowrap">
-                      {creatorName}
-                    </p>
-                  </div>
-                )}
+              <CardContent>
+                <div className="relative">
+                  {renderContent()}
+                  {showWatermark && creatorName && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
+                      <p className="text-7xl font-bold text-foreground/5 rotate-[-45deg] whitespace-nowrap">
+                        {creatorName}
+                      </p>
+                    </div>
+                  )}
+                </div>
                 <div className="mt-4 flex justify-end">
                   <Button
                     onClick={handleMarkComplete}
